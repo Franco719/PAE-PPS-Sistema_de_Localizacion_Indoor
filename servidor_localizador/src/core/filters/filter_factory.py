@@ -1,45 +1,45 @@
-from src.core.filters.kalman_filter import FiltroKalman
-from src.core.filters.filter_strategy import FiltroRSSI
-from src.core.filters.mediana_filter import FiltroMediana
-from src.core.filters.median_filter import FiltroMedia
+from src.core.filters.filter_strategy import RSSIFilter
+from src.core.filters.kalman_filter import KalmanFilter
+from src.core.filters.median_filter import MedianFilter
+from src.core.filters.mean_filter import MeanFilter
 
 
-def crear_filtro(metodo, nodo_id: int, sala: str, ventana=None):
+def create_filter(method, nodo_id: int, room: str, window=None):
 
-    match metodo:
+    match method:
         
         case "Kalman":
-            return FiltroKalman(nodo_id, sala)
+            return KalmanFilter(nodo_id, room)
 
-        case "Mediana":
-            return FiltroMediana(nodo_id, ventana)
+        case "Median":
+            return MedianFilter(nodo_id, window)
 
-        case "Media":
-            return FiltroMedia(nodo_id, ventana)
+        case "Mean":
+            return MeanFilter(nodo_id, window)
 
-        case "Ninguno":
-            return SinFiltro()
+        case _ :
+            return WithoutFilter()
 
-    raise ValueError(f"Método desconocido: {metodo}")
+    raise ValueError(f"Método desconocido: {method}")
 
 
-class SinFiltro(FiltroRSSI):
+class WithoutFilter(RSSIFilter):
 
-    def filtrar(self, bssid: str, rssi: int):
+    def filter(self, bssid: str, rssi: int):
         return rssi
 
 
-    def get_valor(self, bssid: str):
+    def get_value(self, bssid: str):
         return None
 
 
-    def actualizar(self, redes):
+    def update(self, redes):
         return None
 
 
-    def get_nombre_metodo(self) -> str:
+    def get_method_name(self) -> str:
         return "Ninguno"
     
     
-    def finalizar(self):
+    def finish(self):
         pass

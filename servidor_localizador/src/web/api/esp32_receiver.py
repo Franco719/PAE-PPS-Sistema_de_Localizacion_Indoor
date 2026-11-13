@@ -1,8 +1,8 @@
 from flask import request, jsonify, Blueprint, render_template, redirect, url_for
-from src.core.database.redis_client import guardar_lectura_cruda, db as redis_db
-from src.core.filters.filter_manager import filtro_muestreo
+from src.core.database.redis_client import db as redis_db, save_raw_reading
+from src.core.filters.filter_manager import sample_filters
 from src.core.database import db
-from src.core.models.muestra_wifi import MuestraWifi
+from src.core.models.wifi_sample import WiFiSample
 from src.web.schemas.esp32_receiver import wifi_records_schema
 from marshmallow import ValidationError
 from dotenv import load_dotenv
@@ -13,12 +13,12 @@ bp = Blueprint("api", __name__, url_prefix="/api")
 load_dotenv()
 
 @bp.route('/localizar', methods=['POST'])
-def recibir_datos_esp32():
-    """Recibe los datos de Wi-Fi que percibe y envía la placa ESP32, y los guarda en Redis (si no se está tomando muestras
-    para entrenamiento) o en la Base de Datos (si se está tomando muestras para entrenamiento)"""
+def get_esp32_data():
+    """Receibes Wi-Fi data recolected and sended by the ESP32 Microcontroler, and save it in Redis (if it's not
+    taken samples for training) or in the Database (if it's taken samples for training)"""
     
-    token_recibido = request.headers.get("API-Key")
-    if token_recibido != os.environ.get("SECRET_KEY"):
+    receibed_token = request.headers.get("API-Key")
+    if receibed_token != os.environ.get("SECRET_KEY"):
         print("¡Intento de acceso no autorizado bloqueado!")
         return jsonify({"status": "error", "message": "No autorizado"}), 401
     
@@ -26,46 +26,45 @@ def recibir_datos_esp32():
         return jsonify({"status": "error", "message": "Se esperaba formato JSON"}), 400
 
     try:
-        data_validada = wifi_records_schema.load(request.json)
+        validated_data = wifi_records_schema.load(request.json)
     except ValidationError as err:
         return jsonify({"status": "error", "errors": err.messages}), 422
     
-    sala = redis_db.get("Sala_Actual")
-    metodo_filtrado = redis_db.get("Metodo_Filtrado")
-    if metodo_filtrado == ("Mediana" or "Media"):
-        ventana = redis_db.get("Ventana")
-    nodo_id = "1" # Por ahora hardcodeado, luego si hay más de uno hay que modificar en el esp32 para que mande el id
     
-    if not sala:
+    #filter_method = redis_db.get("Filter_Method")
+    #if filter_method == ("Median" or "Mean"):
+    #    window = redis_db.get("Window")
+    
+    nodo_id = validated_data["nodo_id"]
+    room = redis_db.get("Actual_Room")
+    redis_nodo_id = redis_db.get("Nodo_ID")
+    
+    sample_nodo = False if not redis_nodo_id else int(redis_nodo_id) == int(nodo_id)
+    
+    if not sample_nodo:
         # Modo producción: Solo guarda la lectura instantánea de Redis para localizar sin una nueva lectura
-        registro_redis = {"redes": data_validada, "fecha_escaneo": datetime.now().isoformat()}
-        guardar_lectura_cruda(nodo_id, registro_redis)
-        print(f"📡 [Nodo {nodo_id}] Guardadas {len(data_validada)} redes validadas en Redis.")
+        redis_record = {"networks": validated_data["networks"], "scan_date": datetime.now().isoformat()}
+        save_raw_reading(nodo_id, redis_record)
+        print(f"📡 [Nodo {nodo_id}] Guardadas {len(validated_data["networks"])} redes validadas en Redis.")
     
     else:
         # Modo entrenamiento: Recorre la lista validada e iserta en la Base de Datos
-        print(f"📥 [ENTRENAMIENTO - {sala}] Guardando ráfaga en Base de Datos Local.")
+        print(f"📥 [ENTRENAMIENTO - {room}] Guardando ráfaga en Base de Datos Local.")
         
-        filtro = filtro_muestreo.obtener()
-        
-        for red in data_validada:
+        for network in validated_data["networks"]:
 
-            rssi_puro = red.get("rssi")
+            rssi_raw = network.get("rssi")
 
-            rssi_filtrado = filtro.filtrar(
-                red.get("bssid"),
-                rssi_puro
-            )
-
-            MuestraWifi.crear_muestra(
+            new_sample = WiFiSample.create_sample(
                 nodo_id=nodo_id,
-                sala=sala,
-                ssid=red.get("ssid"),
-                bssid=red.get("bssid"),
-                rssi_puro=rssi_puro,
-                rssi_filtrado=rssi_filtrado,
-                metodo_filtrado=filtro.get_nombre_metodo()
+                room=room,
+                ssid=network.get("ssid"),
+                bssid=network.get("bssid"),
+                rssi_raw=rssi_raw
             )
+            
+            rssi_filtered = sample_filters.filter(network.get("bssid"), rssi_raw)
+            new_sample.update_filtered_rssi(rssi_filtered)
             
         # El commit lo hago acá para no hacer uno por cada muestra guardada.
         db.session.commit()

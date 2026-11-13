@@ -1,97 +1,97 @@
-from src.core.filters.filter_strategy import FiltroRSSI
-from src.core.models.estado_kalman import EstadoKalman
+from src.core.filters.filter_strategy import RSSIFilter
+from src.core.models.kalman_state import KalmanState
 
 
-class FiltroKalman(FiltroRSSI):
+class KalmanFilter(RSSIFilter):
 
-    def __init__(self, nodo_id: int, sala: str):
+    def __init__(self, nodo_id: int, room: str):
         self.nodo = nodo_id
-        self.sala = sala
-        self.filtros = {}
-        self.finalizado = False
+        self.room = room
+        self.filters = {}
+        self.finished = False
 
 
-    def filtrar(self, bssid, rssi):
-        self.finalizado = False
+    def filter(self, bssid, rssi):
+        self.finished = False
 
-        if bssid not in self.filtros:
-            estado = EstadoKalman.get_estado(bssid, self.nodo, self.sala)
+        if bssid not in self.filters:
+            state = KalmanState.get_state(bssid, self.nodo, self.room)
             
             print(f"Nodo: {self.nodo}")
             print(f"BSSID: {bssid}")
-            print(f"Sala: {self.sala}")
-            print(f"Estado recuperado: {estado}")
+            print(f"Sala: {self.room}")
+            print(f"Estado recuperado: {state}")
             
-            self.filtros[bssid] = Kalman1D(estado)
+            self.filters[bssid] = Kalman1D(state)
 
-        return self.filtros[bssid].actualizar(rssi)
+        return self.filters[bssid].update(rssi)
 
 
-    def get_valor(self, bssid):
+    def get_value(self, bssid):
 
-        filtro = self.filtros.get(bssid)
+        filter = self.filters.get(bssid)
 
-        if filtro is None:
+        if filter is None:
             return None
 
-        return filtro.estado.x
+        return filter.estado.x
 
 
-    def actualizar(self, redes):
+    def update(self, networks):
 
-        for red in redes:
-            self.filtrar(red.bssid, red.rssi)
+        for network in networks:
+            self.filter(network.bssid, network.rssi)
 
 
-    def get_nombre_metodo(self):
+    def get_method_name(self):
         return "Kalman"
     
     
-    def finalizar(self):
-        if self.finalizado:
+    def finish(self):
+        if self.finished:
             return
 
-        for bssid, filtro in self.filtros.items():
-            filtro.guardar(self.nodo, bssid, self.sala)
+        for bssid, filter in self.filters.items():
+            filter.save(self.nodo, bssid, self.room)
 
-        self.finalizado = True
+        self.finished = True
 
 
 class Kalman1D:
 
-    def __init__(self, estado=None):
-        if estado is None:
+    def __init__(self, state=None):
+        if state is None:
             self.x = None
             self.p = 1.0
             self.q = 0.01
             self.r = 1.0
         else:
-            self.x = estado.x
-            self.p = estado.p
-            self.q = estado.q
-            self.r = estado.r
+            self.x = state.x
+            self.p = state.p
+            self.q = state.q
+            self.r = state.r
 
 
-    def actualizar(self, medicion):
+    def update(self, measurement):
 
         if self.x is None:
-            self.x = medicion
+            self.x = measurement
             return self.x
 
-        # Predicción
+        # Prediction
         self.p += self.q
 
-        # Ganancia de Kalman
+        # Kalman gain
         k = self.p / (
             self.p + self.r
         )
 
-        # Corrección
+        # Correction
         self.x += k * (
-            medicion - self.x
+            measurement - self.x
         )
 
-        # Nueva incertidumbre
+        # New uncertainty
         self.p = (
             1 - k
         ) * self.p
@@ -99,11 +99,11 @@ class Kalman1D:
         return self.x
     
     
-    def guardar(self, nodo_id: int, bssid: str, sala: str):
-        EstadoKalman.guardar_estado(
+    def save(self, nodo_id: int, bssid: str, room: str):
+        KalmanState.save_state(
             nodo_id=nodo_id,
             bssid=bssid,
-            sala=sala,
+            room=room,
             x=self.x,
             p=self.p,
             q=self.q,

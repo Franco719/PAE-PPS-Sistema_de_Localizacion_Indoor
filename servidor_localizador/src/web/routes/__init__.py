@@ -1,7 +1,7 @@
 from src.web.api.esp32_receiver import bp as esp32_receiver
-from src.web.controllers.modulo_muestreo import bp as muestreo
-from src.web.controllers.modulo_entrenamiento import bp as entrenamiento
-from src.web.controllers.modulo_prediccion import bp as prediccion
+from src.web.controllers.sample_module import bp as muestreo
+from src.web.controllers.train_module import bp as entrenamiento
+from src.web.controllers.prediction_module import bp as prediccion
 
 
 def register(app):

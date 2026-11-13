@@ -1,27 +1,27 @@
 from abc import ABC, abstractmethod
 
-class FiltroRSSI(ABC):
+class RSSIFilter(ABC):
     
     @abstractmethod
-    def filtrar(self, bssid: str, rssi: str, estado = None):
+    def filter(self, bssid: str, rssi: str, state = None):
         pass
     
     
     @abstractmethod
-    def get_valor(self, bssid: str):
+    def get_value(self, bssid: str):
         pass
     
     
     @abstractmethod
-    def actualizar(self, redes):
+    def update(self, networks):
         pass
     
     
     @abstractmethod
-    def get_nombre_metodo(self) -> str:
+    def get_method_name(self) -> str:
         pass
     
     
     @abstractmethod
-    def finalizar(self):
+    def finish(self):
         pass

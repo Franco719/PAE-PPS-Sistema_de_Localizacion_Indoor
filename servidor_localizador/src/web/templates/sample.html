@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        @keyframes nueva-rafaga {
+        @keyframes new-scan {
             0% {
                 background-color: #bbf7d0;
             }
@@ -20,8 +21,8 @@
             }
         }
 
-        .nueva-rafaga {
-            animation: nueva-rafaga 1.5s ease-out;
+        .new-scan {
+            animation: new-scan 1.5s ease-out;
         }
     </style>
 
@@ -40,7 +41,7 @@
         </p>
 
 
-        {% if not sala_activa %}
+        {% if not active_room %}
 
             <!-- ========================= -->
             <!-- ESTADO: DETENIDO -->
@@ -68,7 +69,7 @@
                 <div>
 
                     <label
-                        for="nombre_sala"
+                        for="room_name"
                         class="block text-sm font-medium text-gray-700 mb-1">
 
                         Nombre de la Sala / Aula
@@ -76,68 +77,46 @@
                     </label>
 
                     <input
-                        id="nombre_sala"
+                        id="room_name"
                         type="text"
-                        name="nombre_sala"
+                        name="room_name"
                         required
                         placeholder="Ej: Laboratorio 3, Aula 102"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg
                             focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
+
+                    <!-- Configuración de ventanas -->
+
                     <label
-                        for="metodo_filtrado"
+                        for="window"
                         class="block text-sm font-medium text-gray-700 mb-1 mt-4">
 
-                        Método de Filtrado de Señal
+                        Tamaño de ventana
 
                     </label>
 
-                    <select
-                        id="metodo_filtrado"
-                        name="metodo_filtrado"
+                    <input
+                        id="window"
+                        type="number"
+                        name="window"
+                        min="3"
+                        step="2"
+                        value="5"
                         required
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg
                             focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
-                        <option value="Kalman">Filtro Kalman</option>
-                        <option value="Mediana">Mediana en una Ventana</option>
-                        <option value="Media">Media en una Ventana</option>
-                        <option value="Ninguno">Sin Filtrado</option>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Cantidad de mediciones utilizadas por los filtros de mediana y media.
+                    </p>
 
-                    </select>
 
-                    <!-- Configuración de la mediana -->
-                    <div
-                        id="configuracion_ventana"
-                        class="hidden mt-4">
-
-                        <label
-                            for="ventana"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Tamaño de ventana
-
-                        </label>
-
-                        <input
-                            id="ventana"
-                            type="number"
-                            name="ventana"
-                            min="3"
-                            step="2"
-                            value="5"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg
-                                focus:ring-2 focus:ring-blue-500 focus:outline-none">
-
-                        <p class="text-xs text-gray-500 mt-1">
-                            Cantidad de mediciones utilizadas para el calculo.
-                        </p>
-
-                    </div>
+                    <!-- Nodo -->
 
                     <label
                         for="nodo_id"
-                        class="block text-sm font-medium text-gray-700 mb-1">
+                        class="block text-sm font-medium text-gray-700 mb-1 mt-4">
 
                         Nodo que realiza el muestreo
 
@@ -147,12 +126,30 @@
                         id="nodo_id"
                         type="number"
                         name="nodo_id"
+                        min="1"
                         required
                         placeholder="Ej: 1"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg
                             focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
                 </div>
+
+
+                <!-- Información sobre los filtros -->
+
+                <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+
+                    <p class="text-sm text-blue-800 font-medium text-center">
+                        ℹ️ Filtrado automático de señales
+                    </p>
+
+                    <p class="text-xs text-blue-700 text-center mt-1">
+                        Durante el muestreo se aplicarán conjuntamente
+                        los filtros Kalman, Mediana y Media.
+                    </p>
+
+                </div>
+
 
                 <button
                     type="submit"
@@ -188,7 +185,7 @@
                     Sala actual:
 
                     <span class="text-blue-700 text-lg block font-bold">
-                        {{ sala_activa }}
+                        {{ active_room }}
                     </span>
 
                 </p>
@@ -238,12 +235,12 @@
                     </thead>
 
 
-                    <tbody id="tabla-redes">
+                    <tbody id="network-table">
 
                         <tr>
 
                             <td
-                                colspan="2"
+                                colspan="3"
                                 class="p-4 text-center text-gray-400">
 
                                 Esperando datos del ESP32...
@@ -259,6 +256,13 @@
             </div>
 
 
+            <p
+                id="sample-message"
+                class="hidden text-sm text-center text-orange-700 bg-orange-50
+                       border border-orange-200 rounded-lg p-3 mb-4">
+            </p>
+
+
             <!-- ========================= -->
             <!-- DETENER -->
             <!-- ========================= -->
@@ -268,6 +272,7 @@
                 method="GET">
 
                 <button
+                    id="sample-button"
                     type="submit"
                     class="w-full bg-red-600 hover:bg-red-700
                            text-white font-semibold py-2.5 rounded-lg
@@ -284,54 +289,34 @@
     </div>
 
 
-    <script>
-
-        const metodoFiltrado = document.getElementById('metodo_filtrado');
-        const configuracionVentana = document.getElementById('configuracion_ventana');
-
-        if (metodoFiltrado) {
-
-            metodoFiltrado.addEventListener('change', function () {
-
-                if (['Media', 'Mediana'].includes(this.value)) {
-                    configuracionVentana.classList.remove('hidden');
-                } else {
-                    configuracionVentana.classList.add('hidden');
-                }
-
-            });
-
-        }
-
-    </script>
-
-
-    {% if sala_activa %}
+    {% if active_room %}
 
         <script>
 
-            let primeraConsulta = true;
-            let idsMuestrasAnteriores = new Set();
+            let firstQuery = true;
+            let latestSamplesIDs = new Set();
 
-            function mostrarMuestreoFinalizado() {
-                const mensaje = document.getElementById('mensaje-muestreo');
-                const boton = document.getElementById('boton-muestreo');
-                const tabla = document.getElementById('tabla-redes');
 
-                if (mensaje) {
-                    mensaje.textContent = 'La sesión de muestreo ha finalizado.';
-                    mensaje.classList.remove('hidden');
+            function showSampleSessionFinished() {
+
+                const message = document.getElementById('sample-message');
+                const button = document.getElementById('sample-button');
+                const table = document.getElementById('network-table');
+
+                if (message) {
+                    message.textContent = 'La sesión de muestreo ha finalizado.';
+                    message.classList.remove('hidden');
                 }
 
-                if (boton) {
-                    boton.disabled = true;
-                    boton.classList.add('opacity-50', 'cursor-not-allowed');
+                if (button) {
+                    button.disabled = true;
+                    button.classList.add('opacity-50', 'cursor-not-allowed');
                 }
 
-                if (tabla) {
-                    tabla.innerHTML = `
+                if (table) {
+                    table.innerHTML = `
                         <tr>
-                            <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                            <td colspan="3" class="px-4 py-6 text-center text-gray-500">
                                 La sesión de muestreo ha finalizado.
                             </td>
                         </tr>
@@ -339,7 +324,8 @@
                 }
             }
 
-            function traerSenalesDesdeLaAPI() {
+
+            function bringSamplesFromAPI() {
 
                 fetch('/modulo_muestreo/muestreo/redes_vivas')
 
@@ -348,71 +334,75 @@
                     .then(data => {
 
                         // La sesión de muestreo expiró
-                        if (!data.activo) {
+                        if (!data.active) {
 
-                            mostrarMuestreoFinalizado();
+                            showSampleSessionFinished();
 
                             return;
                         }
 
 
-                        const tabla =
-                            document.getElementById('tabla-redes');
+                        const table = document.getElementById('network-table');
 
-
-                        if (!tabla) {
+                        if (!table) {
                             return;
                         }
 
-                        const muestras = data.muestras;
+
+                        const samples = data.samples;
 
                         // Detectar si apareció alguna nueva
-                        const hayNuevaRafaga = !primeraConsulta &&
-                            muestras.some(muestra => !idsMuestrasAnteriores.has(muestra.id));
+                        const newScan = !firstQuery && samples.some(sample => !latestSamplesIDs.has(sample.id))
 
-                        tabla.innerHTML = '';
+                        table.innerHTML = '';
 
-                        const idsActuales = new Set();
+                        const actualIDs = new Set();
 
-                        muestras.forEach(red => {
+                        samples.forEach(sample => {
 
-                            const esNueva = !primeraConsulta &&
-                                            !idsMuestrasAnteriores.has(red.id);
+                            const isNew = !firstQuery && !latestSamplesIDs.has(sample.id);
 
                             console.log(
-                                `Muestra ${red.id}: ${esNueva ? 'NUEVA' : 'ANTERIOR'}`
+                                `Muestra ${sample.id}: ${isNew ? 'NUEVA' : 'ANTERIOR'}`
                             );
 
+
                             const colorRssi =
-                                red.rssi_puro > -70
+                                sample.rssi_raw > -70
                                     ? 'text-green-600 font-semibold'
                                     : 'text-orange-500';
 
-                            tabla.innerHTML += `
+
+                            table.innerHTML += `
                                 <tr class="border-t border-gray-200
-                                    ${esNueva ? 'nueva-rafaga' : ''}">
+                                    ${isNew ? 'new-scan' : ''}">
 
                                     <td class="p-2 pl-4 font-mono text-xs text-gray-700">
-                                        ${red.ssid}
+                                        ${sample.ssid}
                                     </td>
 
                                     <td class="p-2 font-mono text-xs text-gray-500">
-                                        ${red.bssid}
+                                        ${sample.bssid}
                                     </td>
 
                                     <td class="p-2 pr-4 text-right ${colorRssi}">
-                                        ${red.rssi_puro} dBm
+                                        ${sample.rssi_raw} dBm
                                     </td>
 
                                 </tr>
                             `;
+
                         });
 
-                        idsActuales.forEach(id => {
-                            idsMuestrasAnteriores.add(id);
+
+                        // Conservar los IDs históricos para evitar
+                        // detectar nuevamente muestras ya conocidas.
+                        actualIDs.forEach(id => {
+                            latestSamplesIDs.add(id);
                         });
 
-                        primeraConsulta = false;
+
+                        firstQuery = false;
 
                     })
 
@@ -424,17 +414,21 @@
                         );
 
                     });
+
             }
+
 
             // Actualizar cada 10 segundos
             setInterval(
-                traerSenalesDesdeLaAPI,
+                bringSamplesFromAPI,
                 10000
             );
 
-            // Primera ejecución
-            traerSenalesDesdeLaAPI();
-            
+
+            // Primera ejecución.
+            bringSamplesFromAPI();
+
+
             window.addEventListener("beforeunload", function () {
 
                 navigator.sendBeacon(

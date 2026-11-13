@@ -1,29 +1,40 @@
-from src.core.filters.filter_factory import crear_filtro
+from src.core.filters.filter_factory import create_filter
 from threading import Lock
+import threading
 
-
-class FiltroManager:
+class FilterManager:
 
     def __init__(self):
-        self.filtro_actual = None
+        self.filters = []
         self.lock = Lock()
 
-    def iniciar(self, metodo, nodo_id: int, sala: str = None , ventana=None):
+    def start(self, nodo_id: int, room: str = None , window=None):
         with self.lock:
-            self.filtro_actual = crear_filtro(metodo, nodo_id, sala, ventana)
+            self.filters.append(create_filter("Kalman", nodo_id, room, window))
+            self.filters.append(create_filter("Median", nodo_id, room, window))
+            self.filters.append(create_filter("Mean", nodo_id, room, window))
 
-    def obtener(self):
+    def filter(self, bssid: str, rssi_raw: int):
         with self.lock:
-            return self.filtro_actual
+            results = {}
+            for filter in self.filters:
+                rssi_filtered = filter.filter(bssid, rssi_raw)
+                filter_method = filter.get_method_name()
+                results[filter_method] = rssi_filtered
+                
+            return results
 
-    def finalizar(self):
+    def finish(self):
         with self.lock:
-            if self.filtro_actual is None:
-                return
+            for filter in self.filters:
+                if filter is None:
+                    return
 
-            self.filtro_actual.finalizar()
-            self.filtro_actual = None
+                filter.finish()
+
+            self.filters = []
+            
 
 
-filtro_muestreo = FiltroManager()
-filtro_prediccion = FiltroManager()
+sample_filters = FilterManager()
+#prediction_filter = FilterManager()

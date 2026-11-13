@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Predicción de ubicación</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+    <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-5xl">
+
+        <h1 class="text-2xl font-bold mb-6 text-center">
+            Predicción de ubicación
+        </h1>
+
+        <form action="{{ url_for('modulo_prediccion.predict') }}"
+              method="POST"
+              class="text-center">
+
+            <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white
+                           font-semibold py-2 px-6 rounded-lg">
+
+                Realizar predicción
+
+            </button>
+
+        </form>
+
+        {% if prediction_kalman or prediction_median or prediction_mean or prediction_ninguno%}
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+
+                <!-- Modelo Kalman -->
+                <div class="p-5 rounded-lg border border-gray-200">
+
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">
+                        Modelo Kalman
+                    </h2>
+
+                    {% if prediction_kalman.prediction_success %}
+
+                        <div class="bg-green-100 rounded-lg p-4 text-center">
+
+                            <p class="text-sm font-semibold text-green-800">
+                                Sala detectada
+                            </p>
+
+                            <p class="text-3xl font-bold text-green-900 mt-2">
+                                {{ prediction_kalman.predicted_room }}
+                            </p>
+
+                        </div>
+
+                        <div class="mt-4 text-sm text-gray-600 space-y-2">
+
+                            <p>
+                                <strong>Filtrado:</strong>
+                                {{ prediction_kalman.filter_method }}
+                            </p>
+
+                            <p>
+                                <strong>Último escaneo:</strong>
+                                {{ prediction_kalman.scan_date.strftime("%d/%m/%Y %H:%M:%S") }}
+                            </p>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="bg-red-100 rounded-lg p-4">
+
+                            <p class="font-semibold text-red-800">
+                                No se pudo realizar la predicción.
+                            </p>
+
+                            <p class="text-sm text-red-700 mt-2">
+                                {{ prediction_kalman.error }}
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Modelo Mediana -->
+                <div class="p-5 rounded-lg border border-gray-200">
+
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">
+                        Modelo Mediana
+                    </h2>
+
+                    {% if prediction_median.prediction_success %}
+
+                        <div class="bg-green-100 rounded-lg p-4 text-center">
+
+                            <p class="text-sm font-semibold text-green-800">
+                                Sala detectada
+                            </p>
+
+                            <p class="text-3xl font-bold text-green-900 mt-2">
+                                {{ prediction_median.predicted_room }}
+                            </p>
+
+                        </div>
+
+                        <div class="mt-4 text-sm text-gray-600 space-y-2">
+
+                            <p>
+                                <strong>Filtrado:</strong>
+                                {{ prediction_median.filter_method }}
+                            </p>
+
+                            <p>
+                                <strong>Último escaneo:</strong>
+                                {{ prediction_median.scan_date.strftime("%d/%m/%Y %H:%M:%S") }}
+                            </p>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="bg-red-100 rounded-lg p-4">
+
+                            <p class="font-semibold text-red-800">
+                                No se pudo realizar la predicción.
+                            </p>
+
+                            <p class="text-sm text-red-700 mt-2">
+                                {{ prediction_median.error }}
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Modelo Media -->
+                <div class="p-5 rounded-lg border border-gray-200">
+
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">
+                        Modelo Media
+                    </h2>
+
+                    {% if prediction_mean.prediction_success %}
+
+                        <div class="bg-green-100 rounded-lg p-4 text-center">
+
+                            <p class="text-sm font-semibold text-green-800">
+                                Sala detectada
+                            </p>
+
+                            <p class="text-3xl font-bold text-green-900 mt-2">
+                                {{ prediction_mean.predicted_room }}
+                            </p>
+
+                        </div>
+
+                        <div class="mt-4 text-sm text-gray-600 space-y-2">
+
+                            <p>
+                                <strong>Filtrado:</strong>
+                                {{ prediction_mean.filter_method }}
+                            </p>
+
+                            <p>
+                                <strong>Último escaneo:</strong>
+                                {{ prediction_mean.scan_date.strftime("%d/%m/%Y %H:%M:%S") }}
+                            </p>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="bg-red-100 rounded-lg p-4">
+
+                            <p class="font-semibold text-red-800">
+                                No se pudo realizar la predicción.
+                            </p>
+
+                            <p class="text-sm text-red-700 mt-2">
+                                {{ prediction_mean.error }}
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Modelo sin filtro -->
+                 <div class="p-5 rounded-lg border border-gray-200">
+
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">
+                        Modelo Sin Filtro
+                    </h2>
+
+                    {% if prediction_ninguno.prediction_success %}
+
+                        <div class="bg-green-100 rounded-lg p-4 text-center">
+
+                            <p class="text-sm font-semibold text-green-800">
+                                Sala detectada
+                            </p>
+
+                            <p class="text-3xl font-bold text-green-900 mt-2">
+                                {{ prediction_ninguno.predicted_room }}
+                            </p>
+
+                        </div>
+
+                        <div class="mt-4 text-sm text-gray-600 space-y-2">
+
+                            <p>
+                                <strong>Filtrado:</strong>
+                                {{ prediction_ninguno.filter_method }}
+                            </p>
+
+                            <p>
+                                <strong>Último escaneo:</strong>
+                                {{ prediction_ninguno.scan_date.strftime("%d/%m/%Y %H:%M:%S") }}
+                            </p>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="bg-red-100 rounded-lg p-4">
+
+                            <p class="font-semibold text-red-800">
+                                No se pudo realizar la predicción.
+                            </p>
+
+                            <p class="text-sm text-red-700 mt-2">
+                                {{ prediction_ninguno.error }}
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</body>
+
+</html>

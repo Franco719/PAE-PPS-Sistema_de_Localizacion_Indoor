@@ -7,4 +7,9 @@ class ESP32ReceiverSchema(Schema):
     rssi = fields.Int(required=True, validate=validate.Range(min=-127, max=0))
 
 
-wifi_records_schema = ESP32ReceiverSchema(many=True)
+class ESP32PayloadSchema(Schema):
+    nodo_id = fields.Int(required=True, validate=validate.Range(min=1, max=10))
+    networks = fields.List(fields.Nested(ESP32ReceiverSchema), required=True )
+
+
+wifi_records_schema = ESP32PayloadSchema()

@@ -2,13 +2,13 @@ from flask import request, jsonify, Blueprint, render_template, redirect, url_fo
 #from src.core.filters.filter_factory import crear_filtro
 #from src.core.database import db as pg_db
 from src.core.database.redis_client import db as redis_db
-from src.core.models.muestra_wifi import MuestraWifi
+from src.core.models.wifi_sample import WiFiSample
 #from src.core.inference.modelo_red import ModeloNN
 #from src.core.inference.gestor_modelos import GestorModelos
-from src.web.schemas.modulo_muestreo import pre_muestreo_schema
+from src.web.schemas.sample_module import pre_sample_schema
 from marshmallow import ValidationError
-from src.core.filters.filter_manager import filtro_muestreo
-import pandas as pd
+from src.core.filters.filter_manager import sample_filters
+#import pandas as pd
 #from servidor_localizador.src.core.task_entrenamiento import probar_celery
 
 
@@ -16,10 +16,10 @@ bp = Blueprint("modulo_muestreo", __name__, url_prefix="/modulo_muestreo")
 
 
 @bp.route('/pre-muestreo', methods=['GET'])
-def vista_muestreo():
-    """Obtiene la vista de pre-muestreo por defecto para ingresar la sala en la que se realiza el muestreo"""
-    filtro_muestreo.finalizar()
-    redis_db.delete("Sala_Actual")
+def sample_view():
+    """Get the pre-sample view by default to enter the room where the samples will be taken"""
+    sample_filters.finish()
+    redis_db.delete("Actual_Room")
     
     """gestor = GestorModelos()
     #gestor.entrenar()
@@ -45,73 +45,75 @@ def vista_muestreo():
     print("¿Terminó?:", resultado.ready())"""
     
 
-    return render_template("muestreo.html")
+    return render_template("sample.html")
 
 @bp.route('/muestreo', methods=['POST'])
-def iniciar_muestreo():
-    """Inicia una sesión de muestreo."""
+def start_sample():
+    """Starts a sample session"""
 
     try:
-        data_validada = pre_muestreo_schema.load(request.form)
+        validated_data = pre_sample_schema.load(request.form)
     except ValidationError as err:
         return jsonify({
             "status": "error",
             "errors": err.messages
         }), 422
 
-    sala = data_validada["nombre_sala"]
-    metodo = data_validada["metodo_filtrado"]
-    nodo_id = data_validada["nodo_id"]
-    ventana = data_validada.get("ventana")
+    room = validated_data["room_name"]
+    #method = validated_data["filter_method"]
+    nodo_id = validated_data["nodo_id"]
+    window = validated_data.get("window")
     
     #filtro_muestreo.iniciar(metodo, ventana)
 
-    if sala:
+    if room:
 
-        redis_db.set("Sala_Actual", sala, ex=300)
-        redis_db.set("Metodo_Filtrado", metodo, ex=300)
+        redis_db.set("Actual_Room", room, ex=300)
+        redis_db.set("Nodo_ID", nodo_id, ex=300)
+        #redis_db.set("Filter_Method", method, ex=300)
 
-        if ventana is not None:
-            redis_db.set("Ventana", ventana, ex=300)
+        if window is not None:
+            redis_db.set("Window", window, ex=300)
 
         """filtro_actual = crear_filtro(
             metodo,
             ventana
         )"""
-        filtro_muestreo.iniciar(metodo, nodo_id, sala, ventana)
+        sample_filters.start(nodo_id, room, window)
 
     return render_template(
-        "muestreo.html",
-        sala_activa=sala
+        "sample.html",
+        active_room=room
     )
 
 
 @bp.route('/muestreo/redes_vivas', methods=['GET'])
-def obtener_redes_vivas():
-    """Obtiene las últimas 10 redes guardadas en la Base de Datos para la sala en muestreo"""
-    sala_actual = redis_db.get("Sala_Actual")
+def get_new_samples():
+    """Get the latest 10 networks samples saved in the database for the room in sample session"""
+    actual_room = redis_db.get("Actual_Room")
+    nodo_id = redis_db.get("Nodo_ID")
     
-    if not sala_actual:
+    if not actual_room:
 
         return jsonify({
-            "activo": False,
-            "muestras": []
+            "active": False,
+            "samples": []
         })
 
-    ultimas_muestras = MuestraWifi.query.filter_by(sala=sala_actual)\
-                                        .order_by(MuestraWifi.fecha_registro.desc())\
+    latest_samples = WiFiSample.query.filter_by(room=actual_room, nodo_id=nodo_id)\
+                                        .order_by(WiFiSample.record_date.desc())\
                                         .limit(10).all()
                                         
-    lista_json = [{"ssid": m.ssid, "rssi_puro": m.rssi_puro, "bssid": m.bssid} for m in ultimas_muestras]
+    json_list = [{"ssid": sample.ssid, "rssi_raw": sample.rssi_raw, "bssid": sample.bssid} for sample in latest_samples]
     return jsonify({
-        "activo": True,
-        "muestras": lista_json
+        "active": True,
+        "samples": json_list
     })
 
 
 @bp.route('/muestreo/salir', methods=['POST'])
-def salir_muestreo():
-    """Permite detener el muestreo ante una salida abrupta de la página"""
-    redis_db.delete("Sala_Actual")
-    filtro_muestreo.finalizar()
+def exit_sample_session():
+    """Stops the actual sample session when an unwanted exit of the page occurs"""
+    redis_db.delete("Actual_Room")
+    sample_filters.finish()
     return "", 204
