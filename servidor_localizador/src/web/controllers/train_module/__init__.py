@@ -91,3 +91,25 @@ def change_name(training_id: int):
     flash("El nombre del entrenamiento se actualizó correctamente.", "success")
 
     return redirect(url_for("modulo_entrenamiento.training_view"))
+
+
+@bp.route('/toggle_activacion_modelo/<training_id>', methods=['POST'])
+def toggle_model_activation(training_id: int):
+    training = Training.get_training_by_id(
+        training_id
+    )
+
+    if training is None:
+        flash("No se encontró el entrenamiento solicitado.", "error")
+        return redirect(url_for("modulo_entrenamiento.training_view"))
+
+    new_state = not training.active
+
+    training.update_training(active=new_state)
+
+    if new_state:
+        flash("El modelo se activó correctamente.", "success")
+    else:
+        flash("El modelo se desactivó correctamente.", "success")
+        
+    return redirect(url_for("modulo_entrenamiento.training_view"))

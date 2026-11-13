@@ -483,13 +483,34 @@
                                                 data-url="{{ url_for('modulo_entrenamiento.change_name', training_id=training.id) }}"
                                                 onclick="renameTraining(this)"
                                                 class="inline-flex items-center justify-center w-9 h-9
-                                                       rounded-lg border border-blue-200
-                                                       text-blue-700 bg-blue-50
-                                                       hover:bg-blue-100 transition">
+                                                    rounded-lg border border-blue-200
+                                                    text-blue-700 bg-blue-50
+                                                    hover:bg-blue-100 transition">
 
                                                 ✏️
 
                                             </button>
+
+
+                                            <!-- ACTIVAR / DESACTIVAR -->
+                                            <form
+                                                action="{{ url_for('modulo_entrenamiento.toggle_model_activation', training_id=training.id) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('{{ '¿Deseás desactivar este modelo?' if training.active else '¿Deseás activar este modelo?' }}');">
+
+                                                <button
+                                                    type="submit"
+                                                    title="{{ 'Desactivar modelo' if training.active else 'Activar modelo' }}"
+                                                    aria-label="{{ 'Desactivar' if training.active else 'Activar' }} modelo {{ training.id }}"
+                                                    class="inline-flex items-center justify-center w-9 h-9
+                                                        rounded-lg border transition
+                                                        {{ 'border-green-200 text-green-700 bg-green-50 hover:bg-green-100' if training.active else 'border-gray-200 text-gray-600 bg-gray-50 hover:bg-gray-100' }}">
+
+                                                    {{ '🟢' if training.active else '⚪' }}
+
+                                                </button>
+
+                                            </form>
 
 
                                             <!-- ELIMINAR -->
@@ -503,9 +524,9 @@
                                                     title="Eliminar entrenamiento"
                                                     aria-label="Eliminar entrenamiento {{ training.id }}"
                                                     class="inline-flex items-center justify-center w-9 h-9
-                                                           rounded-lg border border-red-200
-                                                           text-red-700 bg-red-50
-                                                           hover:bg-red-100 transition">
+                                                        rounded-lg border border-red-200
+                                                        text-red-700 bg-red-50
+                                                        hover:bg-red-100 transition">
 
                                                     🗑️
 
@@ -598,7 +619,7 @@
         function renameTraining(button) {
 
             const actualName = button.dataset.name;
-            const url = boton.dataset.url;
+            const url = button.dataset.url;
 
             const newName = prompt(
                 "Ingresá el nuevo nombre del entrenamiento:",

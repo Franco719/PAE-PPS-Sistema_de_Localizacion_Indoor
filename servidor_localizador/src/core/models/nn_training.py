@@ -87,6 +87,10 @@ class Training(db.Model):
     def update_training(self, **kwargs):
         for attribute, value in kwargs.items():
             match attribute:
+                case "name":
+                    self.name = value
+                case "active":
+                    self.active = value
                 case "state":
                     self.state = value
                 case "finish_date":
