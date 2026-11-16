@@ -1,18 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
+{% extends "index.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
 
-    <title>Predicción de ubicación</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
-
-    <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-5xl">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full">
 
         <h1 class="text-2xl font-bold mb-6 text-center">
             Predicción de ubicación
@@ -25,16 +16,14 @@
             <button type="submit"
                     class="bg-blue-600 hover:bg-blue-700 text-white
                            font-semibold py-2 px-6 rounded-lg">
-
                 Realizar predicción
-
             </button>
 
         </form>
 
-        {% if prediction_kalman or prediction_median or prediction_mean or prediction_ninguno%}
+        {% if prediction_kalman or prediction_median or prediction_mean or prediction_ninguno %}
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mt-8">
 
                 <!-- Modelo Kalman -->
                 <div class="p-5 rounded-lg border border-gray-200">
@@ -257,6 +246,6 @@
 
     </div>
 
-</body>
+</div>
 
-</html>
+{% endblock %}

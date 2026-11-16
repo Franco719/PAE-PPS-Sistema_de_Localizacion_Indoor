@@ -1,0 +1,163 @@
+{% extends "index.html" %}
+
+{% block title %}Inicio - Sistema de localización Wi-Fi{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+
+    <!-- PRESENTACIÓN -->
+    <section class="text-center mb-12">
+
+        <div class="text-5xl mb-5">
+            📡
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">
+            Sistema de localización Indoor
+        </h1>
+
+        <p class="text-gray-500 mt-4 max-w-2xl mx-auto leading-relaxed">
+
+            Plataforma de localización mediante redes Wi-Fi.
+            Administrá el muestreo de señales, entrená modelos de redes
+            neuronales y realizá predicciones de ubicación.
+
+        </p>
+
+    </section>
+
+
+    <!-- MÓDULOS -->
+    <section>
+
+        <h2 class="text-xl font-bold text-gray-800 mb-6">
+            Módulos del sistema
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+
+            <!-- MUESTREO -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200
+                        p-6 flex flex-col">
+
+                <div class="text-4xl mb-4">
+                    📶
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-800 mb-2">
+                    Muestreo
+                </h3>
+
+                <p class="text-sm text-gray-500 leading-relaxed flex-grow">
+
+                    Administrá la captura de señales Wi-Fi de los distintos
+                    puntos de referencia. Configurá las salas y los filtros
+                    utilizados durante la recolección de muestras.
+
+                </p>
+
+                <a href="{{ url_for('modulo_muestreo.sample_view') }}"
+                   class="mt-6 inline-flex justify-center items-center
+                          bg-blue-600 hover:bg-blue-700 text-white
+                          font-semibold py-2.5 px-4 rounded-lg transition">
+
+                    Ir al módulo →
+
+                </a>
+
+            </div>
+
+
+            <!-- ENTRENAMIENTO -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200
+                        p-6 flex flex-col">
+
+                <div class="text-4xl mb-4">
+                    🧠
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-800 mb-2">
+                    Entrenamiento
+                </h3>
+
+                <p class="text-sm text-gray-500 leading-relaxed flex-grow">
+
+                    Generá y administrá modelos de redes neuronales.
+                    Consultá los resultados de entrenamiento y gestioná
+                    los modelos disponibles para realizar predicciones.
+
+                </p>
+
+                <a href="{{ url_for('modulo_entrenamiento.training_view') }}"
+                   class="mt-6 inline-flex justify-center items-center
+                          bg-blue-600 hover:bg-blue-700 text-white
+                          font-semibold py-2.5 px-4 rounded-lg transition">
+
+                    Ir al módulo →
+
+                </a>
+
+            </div>
+
+
+            <!-- PREDICCIÓN -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200
+                        p-6 flex flex-col">
+
+                <div class="text-4xl mb-4">
+                    📍
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-800 mb-2">
+                    Predicción
+                </h3>
+
+                <p class="text-sm text-gray-500 leading-relaxed flex-grow">
+
+                    Realizá predicciones de ubicación utilizando los modelos
+                    entrenados. Compará los resultados obtenidos mediante
+                    los distintos métodos de filtrado de señales (modelo de prueba
+                    básico).
+
+                </p>
+
+                <a href="{{ url_for('modulo_prediccion.prediction_view') }}"
+                   class="mt-6 inline-flex justify-center items-center
+                          bg-blue-600 hover:bg-blue-700 text-white
+                          font-semibold py-2.5 px-4 rounded-lg transition">
+
+                    Ir al módulo →
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- INFORMACIÓN ADICIONAL -->
+    <section class="mt-10 bg-blue-50 border border-blue-100
+                    rounded-xl p-6">
+
+        <h2 class="text-lg font-semibold text-blue-900 mb-2">
+            Acerca del sistema
+        </h2>
+
+        <p class="text-sm text-blue-800 leading-relaxed">
+
+            El sistema utiliza mediciones de intensidad de señal recibida
+            (RSSI) de redes Wi-Fi, usando su BSSID para identificarlas, para 
+            estimar la ubicación de dispositivos dentro de un entorno cerrado, 
+            mediante modelos de aprendizaje automático.
+
+        </p>
+
+    </section>
+
+</div>
+
+{% endblock %}

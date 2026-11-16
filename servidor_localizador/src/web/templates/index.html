@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Sistema de localización Wi-Fi{% endblock %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @keyframes new-scan {
+            0% {
+                background-color: #bbf7d0;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .new-scan {
+            animation: new-scan 1.5s ease-out;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
+
+    {% block navbar %}
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <div class="flex flex-col sm:flex-row sm:items-center
+                        sm:justify-between py-4 gap-4">
+
+                <!-- LOGO / NOMBRE -->
+                <a href="{{ url_for('home.home') }}"
+                   class="text-xl font-bold text-gray-800 whitespace-nowrap">
+
+                    📡 Indoor Localization
+
+                </a>
+
+                <!-- NAVEGACIÓN -->
+                <div class="flex flex-wrap items-center gap-2">
+
+                    <a href="{{ url_for('home.home') }}"
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition
+                       {{ 'bg-blue-100 text-blue-700' if request.endpoint == 'home.home'
+                          else 'text-gray-600 hover:bg-gray-100' }}">
+
+                        Inicio
+
+                    </a>
+
+                    <a href="{{ url_for('modulo_muestreo.sample_view') }}"
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition
+                       {{ 'bg-blue-100 text-blue-700' if request.endpoint == 'modulo_muestreo.pre_muestreo'
+                          else 'text-gray-600 hover:bg-gray-100' }}">
+
+                        Muestreo
+
+                    </a>
+
+                    <a href="{{ url_for('modulo_entrenamiento.training_view') }}"
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition
+                       {{ 'bg-blue-100 text-blue-700' if request.endpoint == 'modulo_entrenamiento.training_view'
+                          else 'text-gray-600 hover:bg-gray-100' }}">
+
+                        Entrenamiento
+
+                    </a>
+
+                    <a href="{{ url_for('modulo_prediccion.prediction_view') }}"
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition
+                       {{ 'bg-blue-100 text-blue-700' if request.endpoint == 'prediction_module.predict'
+                          else 'text-gray-600 hover:bg-gray-100' }}">
+
+                        Predicción (modo de prueba básico)
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </nav>
+    {% endblock %}
+
+
+    <!-- CONTENIDO -->
+    <main>
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-gray-400 py-5">
+
+        Proyecto Indoor · Sistema de localización mediante Wi-Fi
+
+    </footer>
+
+
+    {% block scripts %}{% endblock %}
+
+</body>
+
+</html>

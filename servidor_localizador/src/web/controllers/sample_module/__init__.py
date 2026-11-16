@@ -20,30 +20,8 @@ def sample_view():
     """Get the pre-sample view by default to enter the room where the samples will be taken"""
     sample_filters.finish()
     redis_db.delete("Actual_Room")
-    
-    """gestor = GestorModelos()
-    #gestor.entrenar()
-    
-    artefacto = gestor.cargar(1)
-    print("Modelo cargado correctamente.")
-    print("Claves del artefacto:", artefacto.keys())
-    print("BSSID utilizados:", artefacto["bssids"])
-    print("Método de filtrado:", artefacto["metodo_filtrado"])
-    print("Configuración:", artefacto["configuracion"])
-    
-    resultado = gestor.probar_prediccion(1)
-
-    print("Sala predicha:", resultado["sala_predicha"])
-    print("Escaneo utilizado:", resultado["fecha_escaneo"])
-    print("Método:", resultado["metodo_filtrado"])
-    
-    
-    resultado = probar_celery.delay()
-    
-    print("ID de la tarea:", resultado.id)
-    print("Estado inicial:", resultado.status)
-    print("¿Terminó?:", resultado.ready())"""
-    
+    redis_db.delete("Nodo_ID")
+    redis_db.delete("Window")
 
     return render_template("sample.html")
 
@@ -67,10 +45,13 @@ def start_sample():
     #filtro_muestreo.iniciar(metodo, ventana)
 
     if room:
-
+        
         redis_db.set("Actual_Room", room, ex=300)
         redis_db.set("Nodo_ID", nodo_id, ex=300)
         #redis_db.set("Filter_Method", method, ex=300)
+        
+        #new_room = redis_db.get("Actual_Room")
+        #print(f"Redis sala: {new_room}")
 
         if window is not None:
             redis_db.set("Window", window, ex=300)
@@ -81,10 +62,9 @@ def start_sample():
         )"""
         sample_filters.start(nodo_id, room, window)
 
-    return render_template(
-        "sample.html",
-        active_room=room
-    )
+    #print(f"Sala: {room}")
+
+    return render_template("sample.html", active_room=room)
 
 
 @bp.route('/muestreo/redes_vivas', methods=['GET'])
@@ -115,5 +95,7 @@ def get_new_samples():
 def exit_sample_session():
     """Stops the actual sample session when an unwanted exit of the page occurs"""
     redis_db.delete("Actual_Room")
+    redis_db.delete("Nodo_ID")
+    redis_db.delete("Window")
     sample_filters.finish()
     return "", 204

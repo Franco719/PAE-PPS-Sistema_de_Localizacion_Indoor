@@ -1,34 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
+{% extends "index.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Recolección de Dataset - Proyecto Indoor</title>
-
-    <!-- Tailwind CSS vía CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-        @keyframes new-scan {
-            0% {
-                background-color: #bbf7d0;
-            }
-
-            100% {
-                background-color: transparent;
-            }
-        }
-
-        .new-scan {
-            animation: new-scan 1.5s ease-out;
-        }
-    </style>
-
-</head>
-
-<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center">
+{% block content %}
+<div class="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
 
     <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
 
@@ -288,8 +261,10 @@
 
     </div>
 
+    {% block scripts %}
 
     {% if active_room %}
+
 
         <script>
 
@@ -440,6 +415,9 @@
         </script>
 
     {% endif %}
+    
+    {% endblock %}
 
-</body>
-</html>
+</div>
+
+{% endblock %}

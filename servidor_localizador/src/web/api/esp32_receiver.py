@@ -36,8 +36,10 @@ def get_esp32_data():
     #    window = redis_db.get("Window")
     
     nodo_id = validated_data["nodo_id"]
-    room = redis_db.get("Actual_Room")
     redis_nodo_id = redis_db.get("Nodo_ID")
+    room = redis_db.get("Actual_Room")
+    
+    #print(f"ESP32 sala: {room}")
     
     sample_nodo = False if not redis_nodo_id else int(redis_nodo_id) == int(nodo_id)
     
